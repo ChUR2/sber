@@ -1,19 +1,10 @@
-"""
-Фиче-инжиниринг для задачи «Анализ сайта» СберАвтоподписка.
-
-Модуль общий для ноутбука, обучающего скрипта и API.
-Важно: он импортируется при загрузке model.pkl, поэтому его нельзя
-переименовывать или удалять из папки проекта.
-"""
-
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 
-# --------------------------------------------------------------------------
+
 # Справочники из брифа
-# --------------------------------------------------------------------------
 
 # Целевые действия: любое из них в рамках визита означает конверсию
 TARGET_ACTIONS = [
@@ -71,9 +62,7 @@ FEATURES = CATEGORICAL_FEATURES + NUMERIC_FEATURES
 MISSING = 'unknown'
 
 
-# --------------------------------------------------------------------------
 # Очистка
-# --------------------------------------------------------------------------
 
 def clean_sessions(df: pd.DataFrame) -> pd.DataFrame:
     """Базовая очистка таблицы визитов: пропуски, мусорные значения, дубликаты."""
@@ -99,9 +88,7 @@ def clean_sessions(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# --------------------------------------------------------------------------
 # Признаки
-# --------------------------------------------------------------------------
 
 def _split_resolution(series: pd.Series) -> pd.DataFrame:
     res = series.fillna('0x0').astype(str).str.lower().str.replace(' ', '', regex=False)
@@ -141,14 +128,14 @@ def _os_family(df: pd.DataFrame) -> pd.Series:
 
 
 def make_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Превращает сырые поля визита в матрицу признаков модели."""
+    "Превращает сырые поля визита в матрицу признаков модели."
     df = df.copy()
 
     for col in RAW_COLUMNS:
         if col not in df.columns and col != 'device_model':
             df[col] = np.nan
 
-    # --- время визита
+    # время визита
     date = pd.to_datetime(df['visit_date'], errors='coerce')
     time = pd.to_datetime(df['visit_time'], format='%H:%M:%S', errors='coerce')
 
@@ -161,12 +148,12 @@ def make_features(df: pd.DataFrame) -> pd.DataFrame:
     out['is_weekend'] = out['day_of_week'].isin([5, 6]).astype('int8')
     out['day_part'] = _day_part(out['hour'])
 
-    # --- визит и посетитель
+    # визит и посетитель
     visit_number = pd.to_numeric(df['visit_number'], errors='coerce').fillna(1)
     out['visit_number'] = visit_number.clip(upper=30).astype('int16')
     out['is_repeat_visit'] = (visit_number > 1).astype('int8')
 
-    # --- трафик
+    # трафик
     medium = df['utm_medium'].fillna('(none)').astype(str)
     source = df['utm_source'].fillna(MISSING).astype(str)
     out['is_organic'] = medium.isin(ORGANIC_MEDIUMS).astype('int8')
@@ -177,7 +164,7 @@ def make_features(df: pd.DataFrame) -> pd.DataFrame:
     out['has_utm_campaign'] = df['utm_campaign'].notna().astype('int8')
     out['has_utm_keyword'] = df['utm_keyword'].notna().astype('int8')
 
-    # --- устройство
+    # устройство
     res = _split_resolution(df['device_screen_resolution'])
     width = res['screen_width'].fillna(0).clip(0, 5000)
     height = res['screen_height'].fillna(0).clip(0, 5000)
@@ -188,13 +175,13 @@ def make_features(df: pd.DataFrame) -> pd.DataFrame:
     out['is_mobile'] = df['device_category'].fillna('').eq('mobile').astype('int8')
     out['os_family'] = _os_family(df)
 
-    # --- гео
+    # гео
     country = df['geo_country'].fillna(MISSING).astype(str)
     city = df['geo_city'].fillna(MISSING).astype(str)
     out['is_russia'] = country.eq('Russia').astype('int8')
     out['is_capital'] = city.isin(CAPITALS).astype('int8')
 
-    # --- категориальные как есть
+    # категориальные как есть
     out['utm_source'] = source
     out['utm_medium'] = medium
     out['utm_campaign'] = df['utm_campaign'].fillna(MISSING).astype(str)
