@@ -1,15 +1,3 @@
-"""
-Обучение модели предсказания целевого действия на сайте СберАвтоподписка.
-
-Запуск:
-    python train_model.py --data-dir ./data --out ./model/sber_auto_model.pkl
-
-На вход нужны два файла из архива проекта: ga_sessions.csv и ga_hits.csv
-(либо .pkl версии тех же таблиц).
-Результат: pickle с sklearn Pipeline, который принимает сырые поля визита
-и возвращает вероятность целевого действия.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -35,9 +23,7 @@ from features import (CATEGORICAL_FEATURES, NUMERIC_FEATURES, TARGET_ACTIONS,
 MODEL_VERSION = '1.0'
 
 
-# --------------------------------------------------------------------------
 # Загрузка данных
-# --------------------------------------------------------------------------
 
 def load_sessions(data_dir: Path) -> pd.DataFrame:
     csv, pkl = data_dir / 'ga_sessions.csv', data_dir / 'ga_sessions.pkl'
@@ -93,9 +79,7 @@ def build_dataset(data_dir: Path):
     return sessions, y
 
 
-# --------------------------------------------------------------------------
 # Пайплайн
-# --------------------------------------------------------------------------
 
 def build_pipeline() -> Pipeline:
     import lightgbm as lgb
@@ -142,9 +126,7 @@ def pick_threshold(y_true, proba) -> float:
     return float(thresholds[int(np.nanargmax(f1[:-1]))])
 
 
-# --------------------------------------------------------------------------
 # Основной сценарий
-# --------------------------------------------------------------------------
 
 def main() -> None:
     parser = argparse.ArgumentParser()
