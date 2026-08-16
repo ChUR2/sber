@@ -1,0 +1,22 @@
+# Исходные данные проекта, в репозиторий не попадают (около 4.4 ГБ)
+data/
+*.csv
+*.pkl
+!model/sber_auto_model.pkl
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+env/
+.venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ОС и редакторы
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
